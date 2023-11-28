@@ -21,6 +21,11 @@ func main() {
 func downloadStockfish() {
 	// https://bin.deltalab.group/stockfish-ubuntu-x86-64-avx2
 
+	if _, err := os.Stat("/data/stockfish"); err == nil {
+		fmt.Printf("Stockfish already downloaded\n")
+		return
+	}
+
 	fmt.Printf("Downloading stockfish...\n")
 
 	req, err := http.NewRequest("GET", "https://bin.deltalab.group/stockfish-ubuntu-x86-64-avx2", nil)
