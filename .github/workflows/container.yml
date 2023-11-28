@@ -1,0 +1,31 @@
+name: Build Container
+
+on:
+  push:
+    paths:
+      - '**.go'
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: 'stable'
+      - uses: ko-build/setup-ko@v0.6
+      - if: "startsWith(github.ref, 'refs/tags/v')"
+        name: ko build
+        env:
+          KO_DOCKER_REPO: ghcr.io/deltalaboratory
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ko build --platform=linux/amd64 --platform=linux/arm64 -B -t latest -t ${{ github.sha }} -t ${{ github.ref_name }} .
+      - if: "!startsWith(github.ref, 'refs/tags/v')"
+        name: ko build
+        env:
+          KO_DOCKER_REPO: ghcr.io/deltalaboratory
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ko build --platform=linux/amd64 --platform=linux/arm64 -B -t debug -t ${{ github.sha }} -t ${{ github.ref_name }} .
