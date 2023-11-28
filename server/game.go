@@ -8,6 +8,8 @@ import (
 	"github.com/notnil/chess"
 )
 
+var zeroTime time.Time
+
 func (server *Server) Place(ctx *fiber.Ctx) error {
 	userId, ok := server.userStore.Load(ctx.Query("token"))
 	if !ok {
@@ -24,31 +26,9 @@ func (server *Server) Place(ctx *fiber.Ctx) error {
 	player := "w"
 	if roomT.BlackId == ctx.Query("token") {
 		player = "b"
-		roomT.lastBlackMove = time.Now()
 	}
 
 	fmt.Printf("Player %s(%s) move %s\n", userId, player, ctx.Params("move"))
-
-	switch player {
-	case "w":
-		if roomT.timerWhite-time.Since(roomT.lastWhiteMove) < 0 {
-			roomT.game.Resign(chess.White)
-			return ctx.Status(fiber.StatusOK).JSON(PlaceResult{
-				Outcome: roomT.game.Outcome().String(),
-				Method:  roomT.game.Method().String() + " (timeout)",
-				FEN:     roomT.game.FEN(),
-			})
-		}
-	case "b":
-		if roomT.timerBlack-time.Since(roomT.lastBlackMove) < 0 {
-			roomT.game.Resign(chess.Black)
-			return ctx.Status(fiber.StatusOK).JSON(PlaceResult{
-				Outcome: roomT.game.Outcome().String(),
-				Method:  roomT.game.Method().String() + " (timeout)",
-				FEN:     roomT.game.FEN(),
-			})
-		}
-	}
 
 	if roomT.game.Position().Turn().String() != player {
 		fmt.Printf("Player %s(%s) move %s - not it's turn\n", userId, player, ctx.Params("move"))
@@ -58,6 +38,19 @@ func (server *Server) Place(ctx *fiber.Ctx) error {
 	if err := roomT.game.MoveStr(ctx.Params("move")); err != nil {
 		fmt.Printf("Player %s(%s) move %s - %s\n", userId, player, ctx.Params("move"), err.Error())
 		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
+
+	switch player {
+	case "w":
+		if roomT.lastPlaced == zeroTime {
+			roomT.lastPlaced = time.Now()
+		} else {
+			roomT.timerWhite -= time.Since(roomT.lastPlaced)
+			roomT.lastPlaced = time.Now()
+		}
+	case "b":
+		roomT.timerBlack -= time.Since(roomT.lastPlaced)
+		roomT.lastPlaced = time.Now()
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(PlaceResult{
@@ -110,15 +103,51 @@ func (server *Server) RemainTime(ctx *fiber.Ctx) error {
 
 	if roomT.WhiteId == ctx.Query("token") {
 		return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-			Remain: (roomT.timerWhite - time.Since(roomT.lastWhiteMove)).String(),
+			Player:   roomT.timerWhite.String(),
+			Opponent: roomT.timerBlack.String(),
 		})
 	}
 	if roomT.BlackId == ctx.Query("token") {
 		return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-			Remain: (roomT.timerBlack - time.Since(roomT.lastBlackMove)).String(),
+			Player:   roomT.timerBlack.String(),
+			Opponent: roomT.timerWhite.String(),
 		})
 	}
 	return ctx.SendStatus(fiber.StatusBadRequest)
+}
+
+func (server *Server) Resign(ctx *fiber.Ctx) error {
+	userId, ok := server.userStore.Load(ctx.Query("token"))
+	if !ok {
+		return ctx.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	room, ok := server.roomStore.Load(ctx.Params("id"))
+	if !ok {
+		return ctx.SendStatus(fiber.StatusNotFound)
+	}
+
+	roomT := room.(*Room)
+
+	player := "w"
+	if roomT.BlackId == ctx.Query("token") {
+		player = "b"
+	}
+
+	fmt.Printf("Player %s(%s) resign\n", userId, player)
+
+	switch player {
+	case "w":
+		roomT.game.Resign(chess.White)
+	case "b":
+		roomT.game.Resign(chess.Black)
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(PlaceResult{
+		Outcome: roomT.game.Outcome().String(),
+		Method:  roomT.game.Method().String(),
+		FEN:     roomT.game.FEN(),
+	})
 }
 
 type PlaceResult struct {
@@ -138,5 +167,6 @@ type CurrentBoardResponse struct {
 }
 
 type RemainTimeResponse struct {
-	Remain string `json:"remain"`
+	Player   string `json:"player"`
+	Opponent string `json:"opponent"`
 }

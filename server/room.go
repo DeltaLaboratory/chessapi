@@ -32,11 +32,11 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 		WhiteId: userToken,
 		game:    chess.NewGame(),
 
-		created:       time.Now(),
-		started:       time.Now(),
-		lastWhiteMove: time.Now(),
-		timerWhite:    time.Minute * 10,
-		timerBlack:    time.Minute * 10,
+		created:    time.Now(),
+		started:    time.Now(),
+		lastPlaced: time.Time{},
+		timerWhite: time.Minute * 10,
+		timerBlack: time.Minute * 10,
 	}
 
 	server.roomStore.Store(roomId, room)
@@ -60,7 +60,6 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 			if err := eng.Run(uci.CmdUCI, uci.CmdIsReady, uci.CmdUCINewGame); err != nil {
 				panic(err)
 			}
-
 			for {
 				if room.game.Position().Turn() == chess.Black {
 					cmdPos := uci.CmdPosition{Position: room.game.Position()}
@@ -72,7 +71,10 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 					if err := room.game.Move(move); err != nil {
 						panic(err)
 					}
-					fmt.Printf("Stockfish move %s\n", move.String())
+					fmt.Printf("Stockfish move %s\n", move)
+
+					room.timerBlack -= time.Since(room.lastPlaced)
+					room.lastPlaced = time.Now()
 				}
 				time.Sleep(time.Second)
 			}
@@ -170,6 +172,15 @@ func (server *Server) ListRoom(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusOK).SendString("[]")
 	}
 
+	for _, room := range rooms[offset:] {
+		if room.BlackId != "" {
+			room.Name = fmt.Sprintf("%s (playing)", room.Name)
+		}
+		if room.game.Outcome() != chess.NoOutcome {
+			room.Name = fmt.Sprintf("%s (finished)", room.Name)
+		}
+	}
+
 	return ctx.Status(fiber.StatusOK).JSON(rooms[offset:])
 }
 
@@ -187,11 +198,9 @@ type Room struct {
 
 	game *chess.Game
 
-	created time.Time
-	started time.Time
-
-	timerWhite    time.Duration
-	lastWhiteMove time.Time
-	timerBlack    time.Duration
-	lastBlackMove time.Time
+	created    time.Time
+	started    time.Time
+	lastPlaced time.Time
+	timerWhite time.Duration
+	timerBlack time.Duration
 }
