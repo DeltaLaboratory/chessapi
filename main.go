@@ -45,7 +45,7 @@ func downloadStockfish() {
 		panic(err)
 	}
 
-	if err := os.WriteFile("stockfish", stockfish, 0755); err != nil {
+	if err := os.WriteFile("/data/stockfish", stockfish, 0755); err != nil {
 		panic(err)
 	}
 

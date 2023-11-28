@@ -51,7 +51,7 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 			room.Black = "stockfish"
 			room.BlackId = "stockfish"
 
-			eng, err := uci.New("stockfish")
+			eng, err := uci.New("/data/stockfish")
 			if err != nil {
 				panic(err)
 			}
