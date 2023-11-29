@@ -10,7 +10,6 @@ type Server struct {
 	app       *fiber.App
 	userStore sync.Map
 	roomStore sync.Map
-	mu        sync.Mutex
 }
 
 func NewServer() *Server {
@@ -18,7 +17,6 @@ func NewServer() *Server {
 		app:       fiber.New(fiber.Config{Immutable: true}),
 		userStore: sync.Map{},
 		roomStore: sync.Map{},
-		mu:        sync.Mutex{},
 	}
 }
 

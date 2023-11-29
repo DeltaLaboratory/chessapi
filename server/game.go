@@ -8,8 +8,6 @@ import (
 	"github.com/notnil/chess"
 )
 
-var zeroTime time.Time
-
 func (server *Server) Place(ctx *fiber.Ctx) error {
 	userId, ok := server.userStore.Load(ctx.Query("token"))
 	if !ok {
@@ -38,19 +36,6 @@ func (server *Server) Place(ctx *fiber.Ctx) error {
 	if err := roomT.game.MoveStr(ctx.Params("move")); err != nil {
 		fmt.Printf("Player %s(%s) move %s - %s\n", userId, player, ctx.Params("move"), err.Error())
 		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
-
-	switch player {
-	case "w":
-		if roomT.lastPlaced == zeroTime {
-			roomT.lastPlaced = time.Now()
-		} else {
-			roomT.timerWhite -= time.Since(roomT.lastPlaced)
-			roomT.lastPlaced = time.Now()
-		}
-	case "b":
-		roomT.timerBlack -= time.Since(roomT.lastPlaced)
-		roomT.lastPlaced = time.Now()
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(PlaceResult{
@@ -102,16 +87,32 @@ func (server *Server) RemainTime(ctx *fiber.Ctx) error {
 	roomT := room.(*Room)
 
 	if roomT.WhiteId == ctx.Query("token") {
-		return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-			Player:   roomT.timerWhite.String(),
-			Opponent: roomT.timerBlack.String(),
-		})
+		switch roomT.game.Position().Turn().String() {
+		case "w":
+			return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
+				Player:   (roomT.timerWhite - time.Since(roomT.lastPlaced)).String(),
+				Opponent: roomT.timerBlack.String(),
+			})
+		case "b":
+			return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
+				Player:   roomT.timerWhite.String(),
+				Opponent: (roomT.timerBlack - time.Since(roomT.lastPlaced)).String(),
+			})
+		}
 	}
 	if roomT.BlackId == ctx.Query("token") {
-		return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-			Player:   roomT.timerBlack.String(),
-			Opponent: roomT.timerWhite.String(),
-		})
+		switch roomT.game.Position().Turn().String() {
+		case "w":
+			return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
+				Player:   roomT.timerBlack.String(),
+				Opponent: (roomT.timerWhite - time.Since(roomT.lastPlaced)).String(),
+			})
+		case "b":
+			return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
+				Player:   (roomT.timerBlack - time.Since(roomT.lastPlaced)).String(),
+				Opponent: roomT.timerWhite.String(),
+			})
+		}
 	}
 	return ctx.SendStatus(fiber.StatusBadRequest)
 }

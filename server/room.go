@@ -46,8 +46,6 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 	if ctx.Query("stockfish") == "enable" {
 		fmt.Printf("Stockfish enabled for room %s\n", roomId)
 		go func() {
-			time.Sleep(time.Second * 5)
-
 			room.Black = "stockfish"
 			room.BlackId = "stockfish"
 
@@ -60,8 +58,10 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 			if err := eng.Run(uci.CmdUCI, uci.CmdIsReady, uci.CmdUCINewGame); err != nil {
 				panic(err)
 			}
+			fmt.Printf("Stockfish initialized\n")
 			for {
 				if room.game.Position().Turn() == chess.Black {
+					fmt.Printf("Stockfish thinking...\n")
 					cmdPos := uci.CmdPosition{Position: room.game.Position()}
 					cmdGo := uci.CmdGo{MoveTime: time.Second}
 					if err := eng.Run(cmdPos, cmdGo); err != nil {
@@ -99,9 +99,6 @@ func (server *Server) InfoRoom(ctx *fiber.Ctx) error {
 }
 
 func (server *Server) JoinRoom(ctx *fiber.Ctx) error {
-	server.mu.Lock()
-	defer server.mu.Unlock()
-
 	roomId := ctx.Params("id")
 	userToken := ctx.Query("token")
 
@@ -145,9 +142,6 @@ func (server *Server) ListRoom(ctx *fiber.Ctx) error {
 	var rooms []*Room
 
 	offset, _ := ctx.ParamsInt("offset")
-
-	server.mu.Lock()
-	defer server.mu.Unlock()
 
 	server.roomStore.Range(func(key, value interface{}) bool {
 		rooms = append(rooms, value.(*Room))
