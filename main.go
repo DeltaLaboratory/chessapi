@@ -17,9 +17,11 @@ func main() {
 }
 
 func setStockfishPermissions() {
-	if err := os.Chmod(fmt.Sprintf("%s/stockfish", os.Getenv("KO_DATA_PATH")), 0777); err != nil {
+	if err := exec.Command("chmod", "+x", fmt.Sprintf("%s/stockfish", os.Getenv("KO_DATA_PATH"))).Run(); err != nil {
 		fmt.Printf("Failed to chmod stockfish: %s\n", err.Error())
 	}
+
+	fmt.Printf("Running as %s\n", os.Getenv("USER"))
 
 	// check stockfish executable
 	if stat, err := os.Stat(fmt.Sprintf("%s/stockfish", os.Getenv("KO_DATA_PATH"))); err != nil {
