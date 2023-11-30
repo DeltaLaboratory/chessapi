@@ -6,8 +6,6 @@ import (
 )
 
 func (server *Server) Login(ctx *fiber.Ctx) error {
-	server.mu.Lock()
-	defer server.mu.Unlock()
 
 	id := ctx.Params("id")
 
