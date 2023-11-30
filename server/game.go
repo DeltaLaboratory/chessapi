@@ -99,6 +99,14 @@ func (server *Server) RemainTime(ctx *fiber.Ctx) error {
 			Opponent: formatDuration(roomT.timer.White),
 		})
 	}
+
+	if roomT.timer.White <= 0 {
+		roomT.game.Resign(chess.White)
+	}
+	if roomT.timer.Black <= 0 {
+		roomT.game.Resign(chess.Black)
+	}
+
 	return ctx.SendStatus(fiber.StatusBadRequest)
 }
 

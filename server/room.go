@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"os"
 	"slices"
 	"time"
 
@@ -48,7 +47,7 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 			room.Black = "stockfish"
 			room.BlackId = "stockfish"
 
-			eng, err := uci.New(fmt.Sprintf("%s/stockfish", os.Getenv("KO_DATA_PATH")), uci.Debug)
+			eng, err := uci.New("stockfish", uci.Debug)
 			if err != nil {
 				panic(err)
 			}
