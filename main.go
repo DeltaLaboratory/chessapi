@@ -17,19 +17,19 @@ func main() {
 }
 
 func setStockfishPermissions() {
-	if err := os.Chmod(fmt.Sprintf("%sstockfish", os.Getenv("KO_DATA_PATH")), 0777); err != nil {
+	if err := os.Chmod(fmt.Sprintf("%s/stockfish", os.Getenv("KO_DATA_PATH")), 0777); err != nil {
 		panic(err)
 	}
 
 	// check stockfish executable
-	if stat, err := os.Stat(fmt.Sprintf("%sstockfish", os.Getenv("KO_DATA_PATH"))); err != nil {
+	if stat, err := os.Stat(fmt.Sprintf("%s/stockfish", os.Getenv("KO_DATA_PATH"))); err != nil {
 		panic(err)
 	} else {
 		if stat.Mode()&0111 == 0 {
 			panic("Stockfish is not executable")
 		}
 
-		if err = exec.Command(fmt.Sprintf("%sstockfish", os.Getenv("KO_DATA_PATH")), "--help").Run(); err != nil {
+		if err = exec.Command(fmt.Sprintf("%s/stockfish", os.Getenv("KO_DATA_PATH")), "--help").Run(); err != nil {
 			fmt.Printf("Failed to run stockfish: %s\n", err.Error())
 		}
 	}
