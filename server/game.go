@@ -37,6 +37,8 @@ func (server *Server) Place(ctx *fiber.Ctx) error {
 		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
 
+	roomT.timer.Update()
+
 	return ctx.Status(fiber.StatusOK).JSON(PlaceResult{
 		Outcome: roomT.game.Outcome().String(),
 		Method:  roomT.game.Method().String(),
