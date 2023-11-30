@@ -199,6 +199,7 @@ type Room struct {
 	timerBlack time.Duration
 }
 
-func remove[T any](slice []T, s int) []T {
-	return append(slice[:s], slice[s+1:]...)
+func remove[S interface{ ~[]E }, E comparable](slice S, s E) S {
+	loc := slices.Index(slice, s)
+	return append(slice[:loc], slice[loc+1:]...)
 }
