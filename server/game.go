@@ -69,6 +69,7 @@ func (server *Server) CurrentBoard(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(CurrentBoardResponse{
 		FEN:     roomT.game.FEN(),
+		PGN:     roomT.game.String(),
 		Outcome: roomT.game.Outcome().String(),
 		Method:  roomT.game.Method().String(),
 	})
@@ -156,6 +157,7 @@ type CurrentTurnResponse struct {
 
 type CurrentBoardResponse struct {
 	FEN     string `json:"fen"`
+	PGN     string `json:"pgn"`
 	Outcome string `json:"outcome"`
 	Method  string `json:"method"`
 }
