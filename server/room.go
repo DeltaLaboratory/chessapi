@@ -166,7 +166,7 @@ func (server *Server) ListRoom(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusOK).SendString("[]")
 	}
 
-	for i, room := range rooms[offset:] {
+	for _, room := range rooms[offset:] {
 		if room.BlackId != "" {
 			rooms = remove(rooms, room)
 		}
