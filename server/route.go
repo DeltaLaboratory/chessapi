@@ -1,9 +1,15 @@
 package server
 
-import "github.com/gofiber/fiber/v2/middleware/logger"
+import (
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+)
 
 func (server *Server) route() {
 	server.app.Use(logger.New())
+	server.app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+	}))
 	server.app.Get("/login/:id", server.Login)
 	server.app.Get("/room/create/:name", server.CreateRoom)
 	server.app.Get("/room/info/:id", server.InfoRoom)
