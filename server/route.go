@@ -11,4 +11,5 @@ func (server *Server) route() {
 	server.app.Get("/game/turn/:id", server.CurrentTurn)
 	server.app.Get("/game/timer/:id", server.RemainTime)
 	server.app.Get("/game/board/:id", server.CurrentBoard)
+	server.app.Get("/game/resign/:id", server.Resign)
 }
