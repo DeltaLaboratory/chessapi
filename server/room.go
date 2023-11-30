@@ -229,9 +229,10 @@ func (ct *ChessTime) Worker() {
 
 func NewChessTime(dur time.Duration) *ChessTime {
 	ct := &ChessTime{
-		White: dur,
-		Black: dur,
-		turn:  chess.White,
+		White:  dur,
+		Black:  dur,
+		turn:   chess.White,
+		placed: time.Now(),
 	}
 	go ct.Worker()
 	return ct
