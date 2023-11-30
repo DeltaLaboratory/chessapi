@@ -89,14 +89,14 @@ func (server *Server) RemainTime(ctx *fiber.Ctx) error {
 
 	if roomT.WhiteId == ctx.Query("token") {
 		return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-			Player:   roomT.timer.White.String(),
-			Opponent: roomT.timer.Black.String(),
+			Player:   formatDuration(roomT.timer.White),
+			Opponent: formatDuration(roomT.timer.Black),
 		})
 	}
 	if roomT.BlackId == ctx.Query("token") {
 		return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-			Player:   roomT.timer.Black.String(),
-			Opponent: roomT.timer.White.String(),
+			Player:   formatDuration(roomT.timer.Black),
+			Opponent: formatDuration(roomT.timer.White),
 		})
 	}
 	return ctx.SendStatus(fiber.StatusBadRequest)

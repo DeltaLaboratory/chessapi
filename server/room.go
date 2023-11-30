@@ -246,3 +246,10 @@ func remove[S interface{ ~[]E }, E comparable](slice S, s E) S {
 	}
 	return append(slice[:loc], slice[loc+1:]...)
 }
+
+func formatDuration(d time.Duration) string {
+	if d < 0 {
+		return "00:00"
+	}
+	return fmt.Sprintf("%02d:%02d", int(d.Minutes()), int(d.Seconds())%60)
+}
