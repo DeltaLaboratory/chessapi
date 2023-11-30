@@ -166,12 +166,12 @@ func (server *Server) ListRoom(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusOK).SendString("[]")
 	}
 
-	for _, room := range rooms[offset:] {
+	for i, room := range rooms[offset:] {
 		if room.BlackId != "" {
-			room.Name = fmt.Sprintf("%s (playing)", room.Name)
+			rooms = append(rooms[:i], rooms[i+1:]...)
 		}
 		if room.game.Outcome() != chess.NoOutcome {
-			room.Name = fmt.Sprintf("%s (finished)", room.Name)
+			rooms = append(rooms[:i], rooms[i+1:]...)
 		}
 	}
 
