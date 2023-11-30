@@ -60,7 +60,7 @@ func downloadStockfish() {
 }
 
 func setStockfishPermissions() {
-	if err := os.Chmod("/data/stockfish", 0755); err != nil {
+	if err := os.Chmod("/data/stockfish", 0777); err != nil {
 		panic(err)
 	}
 
