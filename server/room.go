@@ -32,11 +32,9 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 		WhiteId: userToken,
 		game:    chess.NewGame(),
 
-		created:    time.Now(),
-		started:    time.Now(),
-		lastPlaced: time.Time{},
-		timerWhite: time.Minute * 10,
-		timerBlack: time.Minute * 10,
+		created: time.Now(),
+		started: time.Now(),
+		timer:   NewChessTime(time.Minute * 15),
 	}
 
 	server.roomStore.Store(roomId, room)
@@ -49,7 +47,7 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 			room.Black = "stockfish"
 			room.BlackId = "stockfish"
 
-			eng, err := uci.New("/data/stockfish", uci.Debug)
+			eng, err := uci.New("stockfish", uci.Debug)
 			if err != nil {
 				panic(err)
 			}
@@ -73,8 +71,7 @@ func (server *Server) CreateRoom(ctx *fiber.Ctx) error {
 					}
 					fmt.Printf("Stockfish move %s\n", move)
 
-					room.timerBlack -= time.Since(room.lastPlaced)
-					room.lastPlaced = time.Now()
+					room.timer.Update()
 				}
 				time.Sleep(time.Second)
 			}
@@ -192,14 +189,58 @@ type Room struct {
 
 	game *chess.Game
 
-	created    time.Time
-	started    time.Time
-	lastPlaced time.Time
-	timerWhite time.Duration
-	timerBlack time.Duration
+	created time.Time
+	started time.Time
+	timer   *ChessTime
+}
+
+type ChessTime struct {
+	White time.Duration `json:"white"`
+	Black time.Duration `json:"black"`
+
+	placed time.Time
+	turn   chess.Color
+}
+
+func (ct *ChessTime) Update() {
+	ct.UpdateTime()
+	ct.turn = ct.turn.Other()
+}
+
+func (ct *ChessTime) UpdateTime() {
+	switch ct.turn {
+	case chess.White:
+		ct.White -= time.Since(ct.placed)
+	case chess.Black:
+		ct.Black -= time.Since(ct.placed)
+	}
+	ct.placed = time.Now()
+}
+
+func (ct *ChessTime) Worker() {
+	for {
+		ct.UpdateTime()
+		time.Sleep(time.Millisecond * 500)
+		if ct.White <= 0 || ct.Black <= 0 {
+			break
+		}
+	}
+}
+
+func NewChessTime(dur time.Duration) *ChessTime {
+	ct := &ChessTime{
+		White: dur,
+		Black: dur,
+		turn:  chess.White,
+	}
+	go ct.Worker()
+	return ct
 }
 
 func remove[S interface{ ~[]E }, E comparable](slice S, s E) S {
 	loc := slices.Index(slice, s)
+	if loc == -1 {
+		return slice
+	}
 	return append(slice[:loc], slice[loc+1:]...)
 }

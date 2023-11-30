@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/notnil/chess"
@@ -87,32 +86,16 @@ func (server *Server) RemainTime(ctx *fiber.Ctx) error {
 	roomT := room.(*Room)
 
 	if roomT.WhiteId == ctx.Query("token") {
-		switch roomT.game.Position().Turn().String() {
-		case "w":
-			return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-				Player:   (roomT.timerWhite - time.Since(roomT.lastPlaced)).String(),
-				Opponent: roomT.timerBlack.String(),
-			})
-		case "b":
-			return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-				Player:   roomT.timerWhite.String(),
-				Opponent: (roomT.timerBlack - time.Since(roomT.lastPlaced)).String(),
-			})
-		}
+		return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
+			Player:   roomT.timer.White.String(),
+			Opponent: roomT.timer.Black.String(),
+		})
 	}
 	if roomT.BlackId == ctx.Query("token") {
-		switch roomT.game.Position().Turn().String() {
-		case "w":
-			return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-				Player:   roomT.timerBlack.String(),
-				Opponent: (roomT.timerWhite - time.Since(roomT.lastPlaced)).String(),
-			})
-		case "b":
-			return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
-				Player:   (roomT.timerBlack - time.Since(roomT.lastPlaced)).String(),
-				Opponent: roomT.timerWhite.String(),
-			})
-		}
+		return ctx.Status(fiber.StatusOK).JSON(RemainTimeResponse{
+			Player:   roomT.timer.Black.String(),
+			Opponent: roomT.timer.White.String(),
+		})
 	}
 	return ctx.SendStatus(fiber.StatusBadRequest)
 }

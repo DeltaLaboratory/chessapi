@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 
 	"chessapi/server"
 )
@@ -69,6 +70,15 @@ func setStockfishPermissions() {
 	} else {
 		if stat.Mode()&0111 == 0 {
 			panic("Stockfish is not executable")
+		}
+
+		// add stockfish to path
+		if err := os.Setenv("PATH", fmt.Sprintf("%s:/data", os.Getenv("PATH"))); err != nil {
+			panic(err)
+		}
+
+		if err = exec.Command("stockfish", "--help").Run(); err != nil {
+			fmt.Printf("Failed to run stockfish: %s\n", err.Error())
 		}
 	}
 
