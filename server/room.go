@@ -168,20 +168,10 @@ func (server *Server) ListRoom(ctx *fiber.Ctx) error {
 
 	for i, room := range rooms[offset:] {
 		if room.BlackId != "" {
-			// remove room
-			if i == len(rooms)-1 {
-				rooms = rooms[:i]
-			} else {
-				rooms = append(rooms[:i], rooms[i+1:]...)
-			}
+			rooms = remove(rooms, i)
 		}
 		if room.game.Outcome() != chess.NoOutcome {
-			// remove room
-			if i == len(rooms)-1 {
-				rooms = rooms[:i]
-			} else {
-				rooms = append(rooms[:i], rooms[i+1:]...)
-			}
+			rooms = remove(rooms, i)
 		}
 	}
 
@@ -207,4 +197,8 @@ type Room struct {
 	lastPlaced time.Time
 	timerWhite time.Duration
 	timerBlack time.Duration
+}
+
+func remove[T any](slice []T, s int) []T {
+	return append(slice[:s], slice[s+1:]...)
 }
