@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 
 	"chessapi/server"
 )
@@ -65,15 +64,15 @@ func setStockfishPermissions() {
 	}
 
 	// check stockfish executable
-	if _, err := os.Stat("/data/stockfish"); err != nil {
+	if stat, err := os.Stat("/data/stockfish"); err != nil {
 		panic(err)
+	} else {
+		if stat.Mode()&0111 == 0 {
+			panic("Stockfish is not executable")
+		}
 	}
 
 	// check stockfish can be called with --help
-	cmd := exec.Command("/data/stockfish", "--help")
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
 
 	fmt.Printf("Stockfish permissions set\n")
 }
