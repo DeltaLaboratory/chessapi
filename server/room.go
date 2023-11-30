@@ -168,10 +168,10 @@ func (server *Server) ListRoom(ctx *fiber.Ctx) error {
 
 	for i, room := range rooms[offset:] {
 		if room.BlackId != "" {
-			rooms = remove(rooms, i)
+			rooms = remove(rooms, room)
 		}
 		if room.game.Outcome() != chess.NoOutcome {
-			rooms = remove(rooms, i)
+			rooms = remove(rooms, room)
 		}
 	}
 
