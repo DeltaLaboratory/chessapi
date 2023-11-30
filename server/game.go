@@ -1,10 +1,12 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/notnil/chess"
+	"github.com/notnil/chess/image"
 )
 
 func (server *Server) Place(ctx *fiber.Ctx) error {
@@ -143,6 +145,20 @@ func (server *Server) Resign(ctx *fiber.Ctx) error {
 		Method:  roomT.game.Method().String(),
 		FEN:     roomT.game.FEN(),
 	})
+}
+
+func (server *Server) Image(ctx *fiber.Ctx) error {
+	room, ok := server.roomStore.Load(ctx.Params("id"))
+	if !ok {
+		return ctx.SendStatus(fiber.StatusNotFound)
+	}
+
+	roomT := room.(*Room)
+
+	buffer := bytes.NewBuffer(nil)
+	image.SVG(buffer, roomT.game.Position().Board())
+	ctx.Set("Content-Type", "image/svg+xml")
+	return ctx.Status(fiber.StatusOK).Send(buffer.Bytes())
 }
 
 type PlaceResult struct {

@@ -21,4 +21,5 @@ func (server *Server) route() {
 	server.app.Get("/game/timer/:id", server.RemainTime)
 	server.app.Get("/game/board/:id", server.CurrentBoard)
 	server.app.Get("/game/resign/:id", server.Resign)
+	server.app.Get("/game/image/:id", server.Image)
 }
